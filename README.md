@@ -4,7 +4,7 @@
 
 MiniLang Pro Compiler is a professional compiler written in C++.
 
-This project is being developed as a complete Compiler Construction and Final Year Project.
+This project is being developed as a complete Compiler Construction 
 
 ## Current Status
 
