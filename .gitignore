@@ -1,0 +1,34 @@
+# Build Folder
+build/
+
+# Executables
+*.exe
+*.out
+
+# Object Files
+*.o
+*.obj
+
+# Libraries
+*.lib
+*.a
+
+# Logs
+*.log
+
+# Visual Studio Code
+.vscode/
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Temporary Files
+*.tmp
+*.temp
+
+# Operating System
+Thumbs.db
+.DS_Store
