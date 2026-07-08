@@ -1,0 +1,40 @@
+Program         ::= StatementList
+
+StatementList   ::= Statement StatementList | ε
+
+Statement       ::= Declaration
+                  | Assignment
+                  | IfStatement
+                  | WhileStatement
+                  | ForStatement
+                  | ReturnStatement
+                  | FunctionDeclaration
+
+Declaration     ::= DataType Identifier OptionalInitialization ";"
+
+OptionalInitialization ::= "=" Expression | ε
+
+DataType        ::= int
+                  | float
+                  | double
+                  | bool
+                  | char
+                  | string
+
+Assignment      ::= Identifier "=" Expression ";"
+
+Expression      ::= Term ExpressionPrime
+
+ExpressionPrime ::= "+" Term ExpressionPrime
+                  | "-" Term ExpressionPrime
+                  | ε
+
+Term            ::= Factor TermPrime
+
+TermPrime       ::= "*" Factor TermPrime
+                  | "/" Factor TermPrime
+                  | ε
+
+Factor          ::= Identifier
+                  | Number
+                  | "(" Expression ")"
