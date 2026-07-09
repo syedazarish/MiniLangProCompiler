@@ -68,7 +68,116 @@ void Parser::statement()
 
 void Parser::expression()
 {
-    advance();
+    logicalOr();
+}
+void Parser::logicalOr()
+{
+    logicalAnd();
+
+    while (match(TokenType::LogicalOr))
+    {
+        logicalAnd();
+    }
+}
+
+void Parser::logicalAnd()
+{
+    equality();
+
+    while (match(TokenType::LogicalAnd))
+    {
+        equality();
+    }
+}
+
+void Parser::equality()
+{
+    comparison();
+
+    while (match(TokenType::Equal) ||
+           match(TokenType::NotEqual))
+    {
+        comparison();
+    }
+}
+
+void Parser::comparison()
+{
+    term();
+
+    while (match(TokenType::LessThan) ||
+           match(TokenType::LessEqual) ||
+           match(TokenType::GreaterThan) ||
+           match(TokenType::GreaterEqual))
+    {
+        term();
+    }
+}
+
+void Parser::term()
+{
+    factor();
+
+    while (match(TokenType::Plus) ||
+           match(TokenType::Minus))
+    {
+        factor();
+    }
+}
+
+void Parser::factor()
+{
+    unary();
+
+    while (match(TokenType::Multiply) ||
+           match(TokenType::Divide) ||
+           match(TokenType::Modulus))
+    {
+        unary();
+    }
+}
+
+void Parser::unary()
+{
+    if (match(TokenType::LogicalNot) ||
+        match(TokenType::Minus))
+    {
+        unary();
+        return;
+    }
+
+    primary();
+}
+
+void Parser::primary()
+{
+    if (match(TokenType::IntegerLiteral)) return;
+
+    if (match(TokenType::FloatLiteral)) return;
+
+    if (match(TokenType::DoubleLiteral)) return;
+
+    if (match(TokenType::BooleanLiteral)) return;
+
+    if (match(TokenType::CharacterLiteral)) return;
+
+    if (match(TokenType::StringLiteral)) return;
+
+    if (match(TokenType::Identifier)) return;
+
+    if (match(TokenType::LeftParenthesis))
+    {
+        expression();
+
+        consume(
+            TokenType::RightParenthesis,
+            "Expected ')' after expression."
+        );
+
+        return;
+    }
+
+    throw std::runtime_error("Expected expression.");
 }
 void Parser::assignmentStatement()
 {
@@ -82,6 +191,7 @@ void Parser::assignmentStatement()
         "Expected '=' after identifier."
     );
 
+    // Parse complete expression
     expression();
 
     consume(
@@ -115,12 +225,53 @@ void Parser::ifStatement()
 
     while (!check(TokenType::RightBrace) && !isAtEnd())
     {
-        statement();
+        if (isTypeSpecifier(currentToken().getType()))
+        {
+            declaration();
+        }
+        else
+        {
+            statement();
+        }
     }
 
     consume(
         TokenType::RightBrace,
         "Expected '}' after if block."
+    );
+
+    if (check(TokenType::KW_Else))
+    {
+        elseStatement();
+    }
+}
+void Parser::elseStatement()
+{
+    consume(
+        TokenType::KW_Else,
+        "Expected 'else'."
+    );
+
+    consume(
+        TokenType::LeftBrace,
+        "Expected '{' after else."
+    );
+
+    while (!check(TokenType::RightBrace) && !isAtEnd())
+    {
+        if (isTypeSpecifier(currentToken().getType()))
+        {
+            declaration();
+        }
+        else
+        {
+            statement();
+        }
+    }
+
+    consume(
+        TokenType::RightBrace,
+        "Expected '}' after else block."
     );
 }
 bool Parser::isAtEnd() const

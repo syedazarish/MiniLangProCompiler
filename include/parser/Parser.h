@@ -34,6 +34,15 @@ private:
     void expression();
     void assignmentStatement();
     void ifStatement();
+    void logicalOr();
+void logicalAnd();
+void equality();
+void comparison();
+void term();
+void factor();
+void unary();
+void primary();
+void elseStatement();
 
     // Utility
     bool isAtEnd() const;
