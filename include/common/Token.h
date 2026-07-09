@@ -30,7 +30,7 @@ public:
 
     std::string getLexeme() const;
 
-    SourceLocation getLocation() const;
+SourceLocation getLocation() const;
 
     void setType(TokenType type);
 

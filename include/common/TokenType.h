@@ -134,7 +134,8 @@ enum class TokenType
     // ===========================
 
     SingleLineComment,
-    MultiLineComment
+    MultiLineComment,
+    ErrorToken
 };
 
 #endif

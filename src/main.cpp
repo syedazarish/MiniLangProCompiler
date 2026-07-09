@@ -1,16 +1,35 @@
 #include <iostream>
+#include <vector>
 
-using namespace std;
+#include "../include/lexer/Lexer.h"
 
 int main()
 {
-    cout << "==========================================" << endl;
-    cout << "      MiniLang Pro Compiler v1.0" << endl;
-    cout << "==========================================" << endl;
+    std::string source = R"(
 
-    cout << endl;
-    cout << "Compiler Initialized Successfully!" << endl;
-    cout << "Welcome to MiniLang Pro." << endl;
+int age = 20;
+float cgpa = 3.75;
+bool passed = true;
+
+age++;
+
+)";
+
+    Lexer lexer(source);
+
+    std::vector<Token> tokens = lexer.tokenize();
+
+    std::cout << "Total Tokens : "
+              << tokens.size()
+              << std::endl;
+              for (const Token& token : tokens)
+{
+    std::cout
+        << token.toString()
+        << "    "
+        << token.getLexeme()
+        << std::endl;
+}
 
     return 0;
 }

@@ -1,7 +1,6 @@
 #include "../../include/lexer/Lexer.h"
 #include "../../include/lexer/CharacterClassifier.h"
 #include "../../include/lexer/LexerConfig.h"
-#include "../../include/lexer/CharacterClassifier.h"
 
 Lexer::Lexer(const std::string& source)
     : buffer(source)
@@ -21,19 +20,17 @@ std::vector<Token> Lexer::tokenize()
 
     return tokens;
 }
+
 void Lexer::scanToken()
 {
-    
-   skipWhitespace();
+    skipWhitespace();
 
-    if (buffer.isAtEnd())
-        return;
     if (buffer.isAtEnd())
         return;
 
     char ch = buffer.current();
 
-    // Identifier or Keyword
+    // Identifier / Keyword
     if (CharacterClassifier::isIdentifierStart(ch))
     {
         scanIdentifier();
@@ -47,47 +44,62 @@ void Lexer::scanToken()
         return;
     }
 
-    // TODO
     // String
-    // Character
-    // Operator
-    // Delimiter
-    // Comment
+    if (ch == '"')
+    {
+        scanString();
+        return;
+    }
 
-    buffer.advance();
+    // Character
+    if (ch == '\'')
+    {
+        scanCharacter();
+        return;
+    }
+
+    // Comment
+    if (ch == '/' && (buffer.peek() == '/' || buffer.peek() == '*'))
+    {
+        skipComment();
+        return;
+    }
+
+    // Operator
     if (CharacterClassifier::isOperator(ch))
-{
-    scanOperator();
-    return;
-}
-if (CharacterClassifier::isDelimiter(ch))
-{
-    scanDelimiter();
-    return;
-}
+    {
+        scanOperator();
+        return;
+    }
+
+    // Delimiter
+    if (CharacterClassifier::isDelimiter(ch))
+    {
+        scanDelimiter();
+        return;
+    }
+
+    // Unknown character
+    buffer.advance();
+    column++;
 }
 void Lexer::scanIdentifier()
 {
     std::string lexeme;
 
-  auto keyword = LexerConfig::KeywordMap.find(lexeme);
-
-if (keyword != LexerConfig::KeywordMap.end())
-{
-    addToken(keyword->second, lexeme);
-}
-else if (LexerConfig::BooleanLiterals.count(lexeme))
-{
-    addToken(TokenType::BooleanLiteral, lexeme);
-}
-else
-{
-    addToken(TokenType::Identifier, lexeme);
-}
-
-    if (LexerConfig::Keywords.count(lexeme))
+    while (!buffer.isAtEnd() &&
+           CharacterClassifier::isIdentifierPart(buffer.current()))
     {
-        addToken(TokenType::Identifier, lexeme);   // Temporary
+        lexeme += buffer.current();
+        buffer.advance();
+        column++;
+    }
+
+    auto keyword = LexerConfig::KeywordMap.find(lexeme);
+
+    if (keyword != LexerConfig::KeywordMap.end())
+    {
+        addToken(keyword->second, lexeme);
     }
     else if (LexerConfig::BooleanLiterals.count(lexeme))
     {
@@ -98,13 +110,8 @@ else
         addToken(TokenType::Identifier, lexeme);
     }
 }
-
 void Lexer::scanNumber()
 {
-
-    char ch = buffer.current();
-
-
     std::string lexeme;
 
     bool isFloat = false;
@@ -124,9 +131,7 @@ void Lexer::scanNumber()
             isFloat = true;
 
             lexeme += ch;
-
             buffer.advance();
-
             column++;
         }
         else
@@ -147,53 +152,240 @@ void Lexer::scanNumber()
 void Lexer::scanOperator()
 {
     char ch = buffer.current();
+    char next = buffer.peek();
 
     std::string lexeme;
-    lexeme += ch;
 
     switch (ch)
     {
         case '+':
-            addToken(TokenType::Plus, lexeme);
+            if (next == '+')
+            {
+                lexeme = "++";
+                addToken(TokenType::Increment, lexeme);
+                buffer.advance();
+                buffer.advance();
+                column += 2;
+            }
+            else if (next == '=')
+            {
+                lexeme = "+=";
+                addToken(TokenType::PlusAssign, lexeme);
+                buffer.advance();
+                buffer.advance();
+                column += 2;
+            }
+            else
+            {
+                lexeme = "+";
+                addToken(TokenType::Plus, lexeme);
+                buffer.advance();
+                column++;
+            }
             break;
 
         case '-':
-            addToken(TokenType::Minus, lexeme);
+            if (next == '-')
+            {
+                lexeme = "--";
+                addToken(TokenType::Decrement, lexeme);
+                buffer.advance();
+                buffer.advance();
+                column += 2;
+            }
+            else if (next == '=')
+            {
+                lexeme = "-=";
+                addToken(TokenType::MinusAssign, lexeme);
+                buffer.advance();
+                buffer.advance();
+                column += 2;
+            }
+            else
+            {
+                lexeme = "-";
+                addToken(TokenType::Minus, lexeme);
+                buffer.advance();
+                column++;
+            }
             break;
 
         case '*':
-            addToken(TokenType::Multiply, lexeme);
+            if (next == '=')
+            {
+                lexeme = "*=";
+                addToken(TokenType::MultiplyAssign, lexeme);
+                buffer.advance();
+                buffer.advance();
+                column += 2;
+            }
+            else
+            {
+                lexeme = "*";
+                addToken(TokenType::Multiply, lexeme);
+                buffer.advance();
+                column++;
+            }
             break;
 
         case '/':
-            addToken(TokenType::Divide, lexeme);
+            if (next == '=')
+            {
+                lexeme = "/=";
+                addToken(TokenType::DivideAssign, lexeme);
+                buffer.advance();
+                buffer.advance();
+                column += 2;
+            }
+            else
+            {
+                lexeme = "/";
+                addToken(TokenType::Divide, lexeme);
+                buffer.advance();
+                column++;
+            }
+            break;
+
+        case '%':
+            lexeme = "%";
+            addToken(TokenType::Modulus, lexeme);
+            buffer.advance();
+            column++;
             break;
 
         case '=':
-            addToken(TokenType::Assign, lexeme);
+            if (next == '=')
+            {
+                lexeme = "==";
+                addToken(TokenType::Equal, lexeme);
+                buffer.advance();
+                buffer.advance();
+                column += 2;
+            }
+            else
+            {
+                lexeme = "=";
+                addToken(TokenType::Assign, lexeme);
+                buffer.advance();
+                column++;
+            }
+            break;
+
+        case '!':
+            if (next == '=')
+            {
+                lexeme = "!=";
+                addToken(TokenType::NotEqual, lexeme);
+                buffer.advance();
+                buffer.advance();
+                column += 2;
+            }
+            else
+            {
+                lexeme = "!";
+                addToken(TokenType::LogicalNot, lexeme);
+                buffer.advance();
+                column++;
+            }
             break;
 
         case '<':
-            addToken(TokenType::LessThan, lexeme);
+            if (next == '=')
+            {
+                lexeme = "<=";
+                addToken(TokenType::LessEqual, lexeme);
+                buffer.advance();
+                buffer.advance();
+                column += 2;
+            }
+            else
+            {
+                lexeme = "<";
+                addToken(TokenType::LessThan, lexeme);
+                buffer.advance();
+                column++;
+            }
             break;
 
         case '>':
-            addToken(TokenType::GreaterThan, lexeme);
+            if (next == '=')
+            {
+                lexeme = ">=";
+                addToken(TokenType::GreaterEqual, lexeme);
+                buffer.advance();
+                buffer.advance();
+                column += 2;
+            }
+            else
+            {
+                lexeme = ">";
+                addToken(TokenType::GreaterThan, lexeme);
+                buffer.advance();
+                column++;
+            }
+            break;
+
+        case '&':
+            if (next == '&')
+            {
+                lexeme = "&&";
+                addToken(TokenType::LogicalAnd, lexeme);
+                buffer.advance();
+                buffer.advance();
+                column += 2;
+            }
+            else
+            {
+                lexeme = "&";
+                addToken(TokenType::BitAnd, lexeme);
+                buffer.advance();
+                column++;
+            }
+            break;
+
+        case '|':
+            if (next == '|')
+            {
+                lexeme = "||";
+                addToken(TokenType::LogicalOr, lexeme);
+                buffer.advance();
+                buffer.advance();
+                column += 2;
+            }
+            else
+            {
+                lexeme = "|";
+                addToken(TokenType::BitOr, lexeme);
+                buffer.advance();
+                column++;
+            }
+            break;
+
+        case '^':
+            lexeme = "^";
+            addToken(TokenType::BitXor, lexeme);
+            buffer.advance();
+            column++;
+            break;
+
+        case '~':
+            lexeme = "~";
+            addToken(TokenType::BitNot, lexeme);
+            buffer.advance();
+            column++;
             break;
 
         default:
-            return;
+            buffer.advance();
+            column++;
+            break;
     }
-
-    buffer.advance();
-    column++;
 }
 void Lexer::scanDelimiter()
 {
     char ch = buffer.current();
 
-    std::string lexeme;
-    lexeme += ch;
+    std::string lexeme(1, ch);
 
     switch (ch)
     {
@@ -238,11 +430,96 @@ void Lexer::scanDelimiter()
             break;
 
         default:
+            buffer.advance();
+            column++;
             return;
     }
 
     buffer.advance();
     column++;
+}
+void Lexer::scanString()
+{
+    std::string lexeme;
+
+    // Skip opening quote
+    buffer.advance();
+    column++;
+
+    while (!buffer.isAtEnd())
+    {
+        char ch = buffer.current();
+
+        if (ch == '"')
+        {
+            // Closing quote found
+            buffer.advance();
+            column++;
+
+            addToken(TokenType::StringLiteral, lexeme);
+            return;
+        }
+
+        // New line before closing quote
+        if (ch == '\n')
+        {
+            // Temporary error recovery
+            buffer.advance();
+            line++;
+            column = 1;
+            return;
+        }
+
+        lexeme += ch;
+        buffer.advance();
+        column++;
+    }
+
+    // EOF reached before closing quote
+    return;
+}
+void Lexer::scanCharacter()
+{
+    std::string lexeme;
+
+    // Skip opening single quote
+    buffer.advance();
+    column++;
+
+    if (buffer.isAtEnd())
+        return;
+
+    char ch = buffer.current();
+
+    // Handle escape sequences
+    if (ch == '\\')
+    {
+        lexeme += ch;
+        buffer.advance();
+        column++;
+
+        if (buffer.isAtEnd())
+            return;
+
+        lexeme += buffer.current();
+        buffer.advance();
+        column++;
+    }
+    else
+    {
+        lexeme += ch;
+        buffer.advance();
+        column++;
+    }
+
+    // Closing quote required
+    if (!buffer.isAtEnd() && buffer.current() == '\'')
+    {
+        buffer.advance();
+        column++;
+
+        addToken(TokenType::CharacterLiteral, lexeme);
+    }
 }
 void Lexer::skipWhitespace()
 {
@@ -273,6 +550,53 @@ void Lexer::skipWhitespace()
         else
         {
             break;
+        }
+    }
+}
+void Lexer::skipComment()
+{
+    // Single-line comment
+    if (buffer.current() == '/' && buffer.peek() == '/')
+    {
+        while (!buffer.isAtEnd() && buffer.current() != '\n')
+        {
+            buffer.advance();
+            column++;
+        }
+
+        return;
+    }
+
+    // Multi-line comment
+    if (buffer.current() == '/' && buffer.peek() == '*')
+    {
+        // Skip /*
+        buffer.advance();
+        buffer.advance();
+        column += 2;
+
+        while (!buffer.isAtEnd())
+        {
+            if (buffer.current() == '*' && buffer.peek() == '/')
+            {
+                // Skip */
+                buffer.advance();
+                buffer.advance();
+                column += 2;
+                return;
+            }
+
+            if (buffer.current() == '\n')
+            {
+                buffer.advance();
+                line++;
+                column = 1;
+            }
+            else
+            {
+                buffer.advance();
+                column++;
+            }
         }
     }
 }
