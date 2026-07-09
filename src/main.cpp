@@ -2,6 +2,7 @@
 #include <vector>
 
 #include "../include/lexer/Lexer.h"
+#include "../include/parser/Parser.h"
 
 int main()
 {
@@ -11,13 +12,16 @@ int age = 20;
 float cgpa = 3.75;
 bool passed = true;
 
-age++;
+age=21;
 
 )";
 
     Lexer lexer(source);
 
     std::vector<Token> tokens = lexer.tokenize();
+    Parser parser(tokens);
+
+parser.parse();
 
     std::cout << "Total Tokens : "
               << tokens.size()
@@ -30,6 +34,7 @@ age++;
         << token.getLexeme()
         << std::endl;
 }
+std::cout << "\nParsing Completed Successfully!" << std::endl;
 
     return 0;
 }
