@@ -245,35 +245,6 @@ void Parser::ifStatement()
         elseStatement();
     }
 }
-void Parser::elseStatement()
-{
-    consume(
-        TokenType::KW_Else,
-        "Expected 'else'."
-    );
-
-    consume(
-        TokenType::LeftBrace,
-        "Expected '{' after else."
-    );
-
-    while (!check(TokenType::RightBrace) && !isAtEnd())
-    {
-        if (isTypeSpecifier(currentToken().getType()))
-        {
-            declaration();
-        }
-        else
-        {
-            statement();
-        }
-    }
-
-    consume(
-        TokenType::RightBrace,
-        "Expected '}' after else block."
-    );
-}
 bool Parser::isAtEnd() const
 {
     return current >= tokens.size() ||
@@ -315,7 +286,6 @@ bool Parser::match(TokenType type)
 
     return false;
 }
-
 void Parser::consume(TokenType type, const std::string& message)
 {
     if (check(type))

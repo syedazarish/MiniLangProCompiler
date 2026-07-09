@@ -6,14 +6,11 @@
 
 int main()
 {
-    std::string source = R"(
-
+std::string source = R"(
 int age = 20;
 float cgpa = 3.75;
 bool passed = true;
-
 age=21;
-
 )";
 
     Lexer lexer(source);

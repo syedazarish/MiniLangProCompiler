@@ -4,6 +4,10 @@
 #include <vector>
 
 #include "../common/Token.h"
+#include "../ast/ExpressionNode.h"
+#include "../ast/LiteralExpressionNode.h"
+#include "../ast/VariableExpressionNode.h"
+#include "../ast/BinaryExpressionNode.h"
 
 class Parser
 {
@@ -31,18 +35,17 @@ private:
     void statement();
 
     // Expressions
-    void expression();
+   void expression();
     void assignmentStatement();
     void ifStatement();
     void logicalOr();
-void logicalAnd();
-void equality();
-void comparison();
-void term();
-void factor();
-void unary();
-void primary();
-void elseStatement();
+    void logicalAnd();
+    void equality();void comparison();
+    void term();
+    void factor();
+    void unary();
+    void primary();
+    void elseStatement();
 
     // Utility
     bool isAtEnd() const;
