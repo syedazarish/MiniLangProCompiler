@@ -296,7 +296,35 @@ void Parser::consume(TokenType type, const std::string& message)
 
     throw std::runtime_error(message);
 }
+void Parser::elseStatement()
+{
+    consume(
+        TokenType::KW_Else,
+        "Expected 'else'."
+    );
 
+    consume(
+        TokenType::LeftBrace,
+        "Expected '{' after else."
+    );
+
+    while (!check(TokenType::RightBrace) && !isAtEnd())
+    {
+        if (isTypeSpecifier(currentToken().getType()))
+        {
+            declaration();
+        }
+        else
+        {
+            statement();
+        }
+    }
+
+    consume(
+        TokenType::RightBrace,
+        "Expected '}' after else block."
+    );
+}
 bool Parser::isTypeSpecifier(TokenType type) const
 {
     switch (type)
